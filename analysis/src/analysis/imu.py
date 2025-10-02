@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import time
-from src.analysis.psql import make_request
+from analysis.psql import make_request
 from scipy.signal import savgol_filter
 
 import pyqtgraph as pg
