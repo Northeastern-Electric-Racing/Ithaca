@@ -25,7 +25,6 @@ class VizCreator():
     # finds and connects to the database base using conn as our connector as a class variable throughout the class.
     load_dotenv()
     link = os.getenv('DATABASE_URL')
-    link = "postgresql://readonly:Racecar202@192.168.100.57:5432/penelope24a"
     try:
         conn = psycopg2.connect(link)
         print('connected to db')
