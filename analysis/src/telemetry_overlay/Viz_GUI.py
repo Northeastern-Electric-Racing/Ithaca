@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import filedialog
 print('tkinter imported')
 
-from analysis.src.telemetry_overlay.video_builder import VizCreator
+from video_builder import VizCreator
 print('VizCreator imported')
 root = Tk()
 root.title('VIZZ')
