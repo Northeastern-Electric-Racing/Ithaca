@@ -1,14 +1,8 @@
-import psycopg2
 import subprocess
-import pandas as pd
 import time
-import shlex
 import matplotlib.pyplot as plt
 from matplotlib.animation import FFMpegWriter
-from dotenv import load_dotenv
-import os
 import matplotlib.ticker as ticker
-
 class VizCreator():
     @staticmethod
     # Creates the decorator that measures performance of the function, used for testing new functions
@@ -23,38 +17,7 @@ class VizCreator():
             return to_return
         return wrapper
     # finds and connects to the database base using conn as our connector as a class variable throughout the class.
-    load_dotenv()
-    link = os.getenv('DATABASE_URL')
-    try:
-        conn = psycopg2.connect(link)
-        print('connected to db')
-    except:
-        print('not connect')
-    
-    @classmethod
-    @time_calls
-        # Queries the database and returns a dataframe with the data requested along with the unit and sensor name
-    def query_builder(cls,sensor,start_time,end_time):
-        # Queries the data_type table to get the unit of the sensor 
-        q_unit = f"SELECT * FROM data_type WHERE data_type.\"name\" = '{sensor}'"
-        df = pd.read_sql_query(q_unit,cls.conn)
-        unit = df['unit'][0]
-        
-        # Queries the data table to get the data from the sensor between a start and end time
-        q = f"SELECT * FROM data WHERE data.\"dataTypeName\" = '{sensor}' AND time BETWEEN timestamp '{start_time}' AND '{end_time}' ORDER BY time ASC"
-        df = pd.read_sql_query(q,cls.conn)
-        
-        # Cleans the data, removing unnesecary columns and changing the values columns so its float for later vizualization.
-        df.drop(['runId','dataTypeName'],axis=1,inplace=True)
-        df['values'] = df['values'].apply(lambda x:float(x[0]))
-        
-        # Formats the time so firstly makes sure its a datetime object and then changes the time so it becomes the time 
-        #from the start in seconds.
-        df['time'] = pd.to_datetime(df['time'], errors='coerce')
-        df['time'] = (df['time'] - df['time'].min()).dt.total_seconds()
-        
-        sensor_name = '/'.join(sensor.split('/')[-2:])
-        return df,unit,sensor_name
+
     
     @staticmethod
     @time_calls
@@ -126,7 +89,9 @@ class VizCreator():
     def overlayTwoLayers(file1, file2, output_file):
         # Shlex splits the command into a format that subprocess can use to run the command, the command is a basic 
         # ffmpeg command that takes in 2 videos as input and then overlays the second video on top of the first video
-        command = shlex.split(f'''ffmpeg -y -i {file1} -i {file2} -c:v h264_videotoolbox -b:v 8000k -filter_complex 
-                            "[1:v]scale=480:270[top]; [0:v][top]overlay" {output_file}.mp4''')
-        subprocess.run(command)
+      command = ['ffmpeg', '-y','-i', file1,'-i', file2,'-c:v', 'h264_videotoolbox',
+                '-b:v', '8000k','-filter_complex', '[1:v]scale=480:270[top]; [0:v][top]overlay',
+                f'{output_file}.mp4']
+      subprocess.run(command)
+
     
