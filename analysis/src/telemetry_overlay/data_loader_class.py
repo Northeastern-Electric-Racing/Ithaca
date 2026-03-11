@@ -1,5 +1,6 @@
 """DataLoader module for querying and processing sensor data from a PostgreSQL database.
 
+
 Provides a class-based interface for fetching time-series sensor data,
 cleaning DataFrames, and building analysis-ready datasets with unit metadata.
 
@@ -9,9 +10,9 @@ Usage:
         start_time='2025-06-08 15:17:09.00',
         end_time='2025-06-08 15:17:23.00'
     )
-    
     Thanks to claude code for this documentation.
 """
+__all__ = ['DataLoader']
 
 import psycopg2
 import pandas as pd
@@ -48,22 +49,27 @@ class DataLoader():
             print(f'The function {func.__name__} took {end-start} second')
             return to_return
         return wrapper
-
+    
+    conn = None
     # Database connection — established once at class load time.
+    
     load_dotenv()
     link = os.getenv(key='DATABASE_URL')
-    try:
+    
+    if link:
+      try:
         conn = psycopg2.connect(link)
-        print('connected to db')
-    except:
-        print('not connect')
-
+      except:
+        raise psycopg2.OperationalError("Couldnt connect to the database")
+    
+    else:
+      raise Exception("No ENV file was found, please write the database url inside an ENV file")
     @classmethod
-    def get_data(cls, sensor, table='data', start_time=None, end_time=None):
+    def get_data(cls, sensor_topic, table='data', start_time=None, end_time=None):
         """Queries the database for sensor data or sensor metadata.
 
         Args:
-            sensor (str): Full sensor path (e.g. 'DTI/Power/AC_Current').
+            sensor_topic (str): Full sensor path (e.g. 'DTI/Power/AC_Current').
             table (str): Table to query — 'data' for time-series readings,
                 'data_type' for sensor metadata (name, unit). Defaults to 'data'.
             start_time (str, optional): Start of time range (e.g. '2025-06-08 15:17:09.00').
@@ -75,10 +81,11 @@ class DataLoader():
             pd.DataFrame: Raw query results as a DataFrame.
         """
         if table == 'data_type':
-            q = f"SELECT * FROM data_type WHERE data_type.\"name\" = '{sensor}'"
+            q = "SELECT * FROM data_type WHERE data_type.\"name\" = %s"
+            df = pd.read_sql_query(q, cls.conn,params=[sensor_topic])
         else:
-            q = f"SELECT * FROM data WHERE data.\"dataTypeName\" = '{sensor}' AND time BETWEEN timestamp '{start_time}' AND '{end_time}' ORDER BY time ASC"
-        df = pd.read_sql_query(q, cls.conn)
+            q = "SELECT * FROM data WHERE data.\"dataTypeName\" = %s AND time BETWEEN %s AND %s ORDER BY time ASC"
+            df = pd.read_sql_query(q, cls.conn,params=[sensor_topic,start_time,end_time])
         return df
 
     @classmethod
