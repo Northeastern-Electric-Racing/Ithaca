@@ -2,33 +2,32 @@ from tkinter import *
 from tkinter import filedialog
 print('tkinter imported')
 
-from video_builder import VizCreator
+from v import VizCreator
+from data_loader_class import DataLoader
 print('VizCreator imported')
 root = Tk()
 root.title('VIZZ')
 root.geometry('800x400')
 print('GUI started')
 
-file_name = ''
 
 
 def path_getter():
   # function to get the file path from the user and allow them to upload the video they want to overlay the telemetry on.
     global file_name
     file_name = filedialog.askopenfilename()
-    file_name = file_name.split('/')[-1]
     path_label.config(text=file_name)
     file_name
     
 def Video_creator():
   # function to create the video with the telemetry overlay, the .get() gets the user input from the entry boxes.
     global file_name
-    x = VizCreator()
-    print(sensor_e.get().strip(),start_time_e.get().strip(),ending_time_e.get().strip())
-    df,unit,name = x.query_builder(sensor_e.get().strip(),start_time_e.get().strip(),ending_time_e.get().strip())
-    x.video_making_1('Graph',df,int(sec_pf_e.get().strip()),int(tick_rate_e.get().strip()),unit,name)
-    # x.video_making_1('Graph',df,4,1,unit,name)
-    x.overlayTwoLayers(file_name,'Graph.mov',save_name_e.get())
+    Viz = VizCreator()
+    Dat = DataLoader()
+    df,unit,name = Dat.query_builder(sensor_e.get().strip(),start_time_e.get().strip(),ending_time_e.get().strip())
+    Viz.video_making_1('Graph',df,int(sec_pf_e.get().strip()),int(tick_rate_e.get().strip()),unit,name)
+    # Viz.video_making_1('Graph',df,4,1,unit,name)
+    Viz.overlayTwoLayers(file_name,'Graph.mov',save_name_e.get())
 
 
 #Creating items
